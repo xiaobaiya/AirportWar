@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>打飞机</title>
+    <style>
+        #main{
+            width: 400px;
+            height: 600px;
+            margin: 0 auto;
+            position: relative;
+            border: 1px solid #222;
+            background-color: #e7e7e7;
+        }
+        #tank{
+            position: absolute;
+            bottom: 0;
+            width: 50px;
+            height: 30px;
+            background-color: #204dff;
+            z-index: 99;
+        }
+        #main span{
+            position: absolute;
+            top: 570px;
+            width: 3px;
+            height: 6px;
+            display: block;
+            background-color: red;
+        }
+        #main em{
+            display: block;
+            width: 50px;
+            height: 30px;
+            position: absolute;
+            top: 0;
+            background-color: #ff9c25;
+        }
+        #score{
+            width: 150px;
+            margin: 30px auto;
+        }
+    </style>
+</head>
+<body>
+<div id="main">
+    <div id="monster"></div>
+    <div id="tank"></div>
+</div>
+<div id="score">分数： <strong>0</strong></div>
+<input type="button" value="开始游戏" onclick="sta()" id="start"/>
+<script src="jquery-2.1.4.min.js"></script>
+<script>
+    var main = document.getElementById('main');
+    var mon = document.getElementById('monster');
+    var tank = document.getElementById('tank');
+    var strong = document.getElementsByTagName('strong')[0];
+    var offX = main.offsetLeft;
+    var start = document.getElementById('start');
+    var restart = document.getElementById('restart');
+
+    function sta(){
+        oneStart = setTimeout(function () {
+            /*通过鼠标控制飞机位置*/
+            main.onmousemove = function (e) {
+                var x = e.clientX - offX - 25;
+                if (x <= 0) {
+                    x = 0
+                } else if (x >= 350) {
+                    x = 350
+                }
+                tank.style.left = x + "px";
+            };
+            /*点击发射子弹,并进行子弹移除*/
+            main.onmousedown = function (e) {
+                var x = e.clientX - offX;
+                var zidan = document.createElement('span');
+                zidan.style.left = x + 'px';
+                zidan.style.top = '570px';
+                main.appendChild(zidan);
+                if(!time) {//给定时器添加判断，就是为了防止连续点击导致定时器产生累加，增加匿名函数的执行速度。
+                    time = setInterval(function () {
+                        var zs = document.getElementsByTagName('span');
+                        $('#main span').css('top', '-=5px');
+                        for (var i = 0; i < zs.length; i++) {
+                            if (parseInt(zs[i].style.top) <= 0) {
+                                zs[i].remove();
+                                console.log(1);
+
+                            }
+                        }
+                    }, 20);
+                }
+            };
+
+            var time = null;
+            /*刷怪,并进行游戏结束判断*/
+            createMonster = setInterval(function () {
+                var monster = document.createElement('em');
+                monster.style.left = 350*Math.random() + 'px';
+                mon.appendChild(monster);
+                console.log(2);
+            },500);
+            var monsterS = document.getElementsByTagName('em');
+            setInterval(function(){
+                $('#main em').css('top','+=7px');
+                console.log(3);
+                for(var i=0;i<monsterS.length;i++){
+                    if(parseInt(monsterS[i].style.top) >= 550 && monsterS[i].style.display != 'none'){//此处需要同时满足怪物的top和 display != 'none' 两个条件才能判断游戏结束
+                        mon.remove();
+                        alert('你输了，游戏结束！当前得分为'+strong.innerText);
+                        clearInterval(createMonster);
+                        clearInterval(time);
+                        clearInterval(clearMonter);
+                        clearInterval(removerMonster);
+                    }
+                }
+            },30);
+            /*碰撞检测，消灭小怪*/
+            clearMonter = setInterval(function () {
+                var spans = document.getElementsByTagName('span');
+                var ems = document.getElementsByTagName('em');
+                for(var i=0; i<spans.length; i++){
+                    for(var j=0; j<ems.length; j++){
+                        var a = parseInt(spans[i].style.top) <= parseInt(ems[j].style.top) + 30;
+                        var b = parseInt(spans[i].style.left) >= parseInt(ems[j].style.left);
+                        var c = parseInt(spans[i].style.left) <= parseInt(ems[j].style.left) + 50;
+                        var d = ems[j].style.display != "none";
+                        var e = spans[i].style.display != "none";
+                        if (a && b && c && d && e) {
+                            ems[j].style.display = 'none';
+//                            ems[j].remove();//不能在这里直接移除被消灭的小怪，因为会改变length值,会导致118行的style属性出错
+                            spans[i].style.display = 'none';
+                            strong.innerText = parseInt(strong.innerText) + 1;
+                        }
+                    }
+                }
+                console.log(4)
+            },20);
+            /*清理被消灭的小怪*/
+            removerMonster = setInterval(function () {
+                var ems = document.getElementsByTagName('em');
+                for(var i = 0; i<ems.length; i++){
+                    if(ems[i].style.display == 'none'){
+                        //console.log('已清理被消灭的小怪');
+                        ems[i].remove();
+                    }
+                }
+                console.log(5);
+            },50000)
+        },3000)
+    }
+</script>
+</body>
+</html>
